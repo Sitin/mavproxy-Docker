@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+  #
+  # MAVProxy (this image)
+  #   Startup options: https://ardupilot.org/mavproxy/docs/getting_started/starting.html
+  #
+  mavproxy:
+    image: sitin/mavproxy:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - MAVPROXY_VERSION
+    stdin_open: true
+    tty: true
+    command:
+      - "--master=tcp:sitl:5760"
+      - "--out=udp:host.docker.internal:${MAV_PROXY_EXTRA_UDP_PORT}"
+      - --map
+      - --console
+    environment:
+      - DISPLAY
+    volumes:
+      - ./.volumes/logs:/var/log/mavproxy
+      - ./.volumes/state:/mavproxy
+    env_file:
+      - .env
+    depends_on:
+      - sitl
+  #
+  # ArduPilot SITL simulator
+  #   See details: https://github.com/Sitin/ardupilot-sitl-docker
+  #
+  sitl:
+    image: sitin/ardupilot-sitl:latest
+    environment:
+      - INSTANCE=0
+      - VEHICLE=ArduCopter
+      - FRAME=+
+      - LOCATION=KSFO
+      - SPEEDUP=1
+    env_file:
+      - .env
