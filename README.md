@@ -8,33 +8,22 @@ Containerized [MAVProxy](https://ardupilot.org/mavproxy/index.html).
 This image is inspired by [asciich/mavproxy](https://hub.docker.com/r/asciich/mavproxy) and tries to remove some of its
 limitations.
 
-Designed to be used with [sitin/ardupilot-sitl](https://hub.docker.com/repository/docker/sitin/ardupilot-sitl).
-
 Usage
 -----
 
-If you have MAVLink master on host 5760, then you can start simply:
+If you have MAVLink device transmitting to host UDP 14540, then you can start with:
 
 ```shell
-docker run -it sitin/mavproxy
+docker run -it sitin/mavproxy --master=udp:host.docker.internal:14540
 ```
-
-This will broadcast to your host UDP 14550 (default behavior).
 
 You can omit `-it` if you don't want to connect to console.
 
-If you want to select another master or additional output:
+Container supports all MAVProxy parameters. For example, if you want to proxy your connection to UDP 14551:
 
 ```shell
-docker run -it sitin/mavproxy --master=--master=tcp:host.docker.internal:5761 --out=udp:host.docker.internal:14551
+docker run -it sitin/mavproxy --master=udp:host.docker.internal:14540 --out=udp:host.docker.internal:14551
 ```
-
-> **NOTE!**
->
-> If you want to suppress default UDP broadcast to `host.docker.internal:14551`, you need to rewrite container 
-> [entry point]([`Dockerfile`](Dockerfile)).
-
-Check [`docker-compose.yml`](docker-compose.yml) and [`Dockerfile`](Dockerfile) for details.
 
 ### Devices
 
@@ -49,6 +38,13 @@ Some available devices:
 - `/dev/ttyUSB0`
 - `/dev/ttyAMA0`
 - `/dev/ttyACM0`
+
+### Volumes
+
+You can save logs and state of MAVProxy by adding the following volumes:
+
+- <path to logs>:/var/log/mavproxy
+- <path to MAVProxy state>:/mavproxy
 
 ### X11
 

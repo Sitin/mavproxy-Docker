@@ -21,8 +21,8 @@ RUN echo "UTC" > /etc/timezone && \
 RUN pip install --upgrade pip && \
     pip install --upgrade setuptools
 
-ARG MAVPROXY_VERSION=1.8.50
-RUN pip install --upgrade MAVProxy==${MAVPROXY_VERSION}
+ARG MAVPROXY_TAG
+RUN pip install --upgrade MAVProxy==$(echo ${MAVPROXY_TAG} | awk -Fv '{ print $0 }')
 
 RUN mkdir -p "/mavproxy" && \
     mkdir -p /var/log/mavproxy/
@@ -38,6 +38,5 @@ RUN for script in $(ls ./*.sh) ; do \
         echo "SCRIPT: ${script} > /usr/bin/${dest}" >> /var/log/buld.log \
     ; done
 
-# By defult we connect to TCP master 5760 at host and proadcast to host UDP 14550
-ENTRYPOINT [ "run-mavproxy", "--out=udp:host.docker.internal:14550" ]
-CMD [ "--master=tcp:host.docker.internal:5760" ]
+ENTRYPOINT [ "run-mavproxy" ]
+CMD [ ]

@@ -42,7 +42,8 @@ logs_dir := $(volumes_dir)/logs
 ###########################################################
 
 dotenv_paths := "$(root_dir)"
-docker_image := sitin/mavproxy
+docker_image := sitin/mavproxy:local
+tag := $(shell git describe --tags --abbrev=0 2>/dev/null)
 version := $(shell cat $(root_dir)/.VERSION)
 
 ###########################################################
@@ -73,31 +74,7 @@ reset-env: ## Resets .env files
 .PHONY: build
 
 build: ## Build all services in Docker
-	docker compose build
-
-###########################################################
-# Releasing
-###########################################################
-.PHONY: release publish inspect tag docker-login push
-
-release: build publish ## Build and releases Docker images
-
-publish: inspect tag docker-login push ## Publishes Docker prebuilt image
-
-inspect: ## Inspect Docker image
-	@echo Image size: $(shell docker image inspect $(docker_image):local --format='{{.Size}}')
-	@echo Version: $(version)
-
-tag: ## Tag Docker image
-	@docker tag $(docker_image):local $(docker_image):latest
-	@docker tag $(docker_image):local $(docker_image):$(version)
-
-push: ## Push to Docker registry
-	@docker push $(docker_image):$(version)
-	@docker push $(docker_image):latest
-
-docker-login: ## Login to Docker registry
-	@echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username sitin --password-stdin
+	MAVPROXY_TAG="$(tag)" docker compose build
 
 ###########################################################
 # Running
@@ -111,6 +88,19 @@ down: ## Shuts down dockerized application and removes docker resources
 	@docker compose down --remove-orphans
 
 ###########################################################
+# Testing
+###########################################################
+.PHONY: test
+
+test: ## Tests that MAVProxy can be built for all architectures
+	@docker buildx create --use && \
+	docker buildx build \
+		--build-arg MAVPROXY_TAG="$(tag)" \
+		--platform linux/amd64,linux/arm64/v8,linux/arm/v7 \
+		--tag "$(docker_image)"  \
+		--file Dockerfile .
+
+###########################################################
 # Cleaning
 ###########################################################
 .PHONY: clean clean-state clean-logs
@@ -122,3 +112,6 @@ clean-state: ## Cleans simulation state
 
 clean-logs: ## Cleans simulation state
 	rm -rf $(logs_dir)
+
+kill-kill-kill: ## Stop all Docker containers
+	@docker stop $(shell docker ps -q)

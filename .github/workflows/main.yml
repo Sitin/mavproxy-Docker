@@ -15,6 +15,15 @@ jobs:
     steps:
     # Checkout repository
     - uses: actions/checkout@master
+    # https://github.com/actions-ecosystem/action-get-latest-tag
+    - name: Get latest tag
+      id: get-latest-tag
+      uses: actions-ecosystem/action-get-latest-tag@v1
+      with:
+        semver_only: true
+        with_initial_version: false
+    - name: Check MAVProxy tags
+      run: if [ -z ${{ steps.get-latest-tag.outputs.tag }} ]; then echo "MAVProxy tag is not specified"; exit 1; else echo "MAVProxy tag = ${{ steps.get-latest-tag.outputs.tag }}"; fi
     # https://github.com/docker/setup-qemu-action
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
@@ -47,9 +56,13 @@ jobs:
     # https://github.com/marketplace/actions/build-and-push-docker-images
     - name: Build and push
       uses: docker/build-push-action@v2
+      env:
+        MAVPROXY_TAG: ${{ steps.get-latest-tag.outputs.tag }}
       with:
         # Supported platforms
-        platforms: linux/amd64,linux/arm64/v8
+        platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+        # Build args
+        build-args: MAVPROXY_TAG
         # Do not push for pull requests
         push: ${{ github.event_name != 'pull_request' }}
         # Tags and labels defined in `meta` step

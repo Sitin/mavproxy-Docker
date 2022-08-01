@@ -10,16 +10,20 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - MAVPROXY_VERSION
+        - MAVPROXY_TAG
     stdin_open: true
     tty: true
     command:
-      - "--master=tcp:sitl:5760"
-      - "--out=udp:host.docker.internal:${MAV_PROXY_EXTRA_UDP_PORT}"
-      - --map
-      - --console
+      - --master=udp:0.0.0.0:14540              # SITL will connect here
+      - --out=udp:host.docker.internal:14550    # For GCS
+      - --out=udp:host.docker.internal:14540    # Extra port (usually for API)
+      # The following requires DISPLAY to set properly in `.env` file
+      # (also you should allow remote connections to your X-server):
+      - --map             # Show map
+      - --console         # Show console
     environment:
       - DISPLAY
+      - SILENT_START
     volumes:
       - ./.volumes/logs:/var/log/mavproxy
       - ./.volumes/state:/mavproxy
@@ -27,17 +31,28 @@ services:
       - .env
     depends_on:
       - sitl
+    networks:
+      default:
+        ipv4_address: 10.20.2.0
   #
-  # ArduPilot SITL simulator
-  #   See details: https://github.com/Sitin/ardupilot-sitl-docker
+  # SITL simulator
+  #   See details: https://hub.docker.com/r/jonasvautherin/px4-gazebo-headless
   #
   sitl:
-    image: sitin/ardupilot-sitl:latest
+    image: jonasvautherin/px4-gazebo-headless:latest
+    command:
+      - -v
+      - typhoon_h480
+      - 10.20.2.0     # API IP
+      - 10.20.2.0     # GCS IP (not used but has to be specified)
     environment:
-      - INSTANCE=0
-      - VEHICLE=ArduCopter
-      - FRAME=+
-      - LOCATION=KSFO
-      - SPEEDUP=1
-    env_file:
-      - .env
+      - NO_PXH=1
+
+#------------------------------------------------------------------------------
+# Since px4-gazebo-headless can't use hostnames, we need to set IP for proxy
+#------------------------------------------------------------------------------
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.20.0.0/20
