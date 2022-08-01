@@ -1,8 +1,5 @@
-name: Update latest tag according to mavp2p
+name: Update latest tag
 on:
-  push:
-    branches:
-      - 'main'
   # See: https://jasonet.co/posts/scheduled-actions/
   schedule:
     # Trigger tags update twice per day

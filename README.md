@@ -1,6 +1,9 @@
 MAVProxy Docker
 ===============
 
+[![Publish Docker](https://github.com/Sitin/mavproxy-Docker/actions/workflows/main.yml/badge.svg)](https://github.com/Sitin/mavproxy-Docker/actions/workflows/main.yml)
+[![Update latest tag according to mavp2p](https://github.com/Sitin/mavproxy-Docker/actions/workflows/update-tags.yml/badge.svg)](https://github.com/Sitin/mavproxy-Docker/actions/workflows/update-tags.yml)
+
 Containerized [MAVProxy](https://ardupilot.org/mavproxy/index.html).
 
 [DockerHub](https://hub.docker.com/repository/docker/sitin/mavproxy).
